@@ -1,0 +1,22 @@
+E:\MinGW_W64_5.3.0\bin\g++ -m64 -Wl,--no-undefined -shared -static -s -Wl,"E:\MATLAB\R2017b/extern/lib/win64/mingw64/exportsmexfileversion.def" C:\Users\HIT\AppData\Local\Temp\mex_852812054308191_22580\mex_lsd_2.obj C:\Users\HIT\AppData\Local\Temp\mex_852812054308191_22580\lsd.obj C:\Users\HIT\AppData\Local\Temp\mex_852812054308191_22580\cpp_mexapi_version.obj   C:\OpenCV\build\install\x64\mingw\lib\libopencv_world3413.dll.a  -LC:\OpenCV\build\install\x64\mingw\bin  -LC:\OpenCV\build\install\x64\mingw\lib   -L"E:\MATLAB\R2017b\extern\lib\win64\mingw64" -llibmx -llibmex -llibmat -lm -llibmwlapack -llibmwblas -o mex_lsd_2.mexw64
+
+g++:
+ -m64 ：在64位下编译，关系到具体变量和指针的位数。
+ -Wl, <options> ：将逗号后的参数传递给链接器linker。
+ 	--no-undefined ：如果链接的库中没有对应的实现，即如果有未定义符号，则链接不通过。
+	-Bstatic -la -lb -lc ：指定ld在处理后续 -l 参数时首选静态链接
+	-Bdynamic -la -lb -lc ：指定ld在处理后续 -l 参数时首选动态库
+ -shared ：生成动态库文件
+ -static ：生成静态库文件
+ -static-libstdc++、-static-libgcc：标准库的静态链接
+ -s ：从可执行文件中删除所有符号表和重新定位信息，以压缩可执行文件
+ -I（大写的i）：指定头文件所在的目录。
+ -L ：表示要链接的库所在的目录。
+ -l（小写的L）：表示要链接的库名称。
+
+
+
+ -c ：只进行预处理、汇编、编译，不进行链接，输出obj文件。
+ -S ：只进行预处理、汇编，不进行编译，输出汇编.s文件。
+ -E ：只进行预处理，不生成文件，要手动重定向到一个输出文件里，输出代码预处理后的结果。
+ -o ：指定输出的文件名。

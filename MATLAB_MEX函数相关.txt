@@ -1,0 +1,59 @@
+MEX是一种可执行程序。（MATLAB EXECUTABLE）
+可以向MATLAB .m脚本函数一样调用。
+可使用C/C++编写提高效率，编译后提高计算速度。
+
+基于两个C++ API:
+1. MATLAB数据API，支持MATLAB数据类型和优化，支持传递MATLAB数据和从MEX返回MATLAB数据
+2. MATLAB C++引擎API支持调用其他MATLAB函数，以及其他特性。
+
+C++的MEX函数编写通过继承matlab::mex::Function中的MexFunction的类
+
+
+【从C++文件 到MEX】
+1. 首先需要写一个接口函数 mexFunction() ,类似于C++中的main()函数
+	# include <mex.h>      包含MEX的头文件
+nlhs:     等号左边的参数个数
+* plhs[]: 等号左边参数的指针
+nrhs:     等号右边的参数个数
+* prhs[]: 等号右边参数的指针
+
+2. MEX使用
+          (!!!) 注意编译器的版本需要是当前MATLAB支持的版本，相应的第三方库文件也要是经过
+	该版本编译器编译的，否则MEX文件可能会报错：缺少...需要的符号
+	-I<路径>添加查找头文件的路径（大写的i）
+	setenv('MW_MINGW64_LOC','E:\MinGW_W64_5.3.0') 添加编译器路径
+	mex -setup c++				指定进行c++编译
+	mex....... -n				输出MEX实际在编译器中执行的指令
+          (!!!) 如果有库（静态或动态）需要链接，要注意链接的方式：-l （小写的L）或 绝对路径
+	mex 接口函数.cpp 具体程序.cpp -I<路径> ......
+	注意传入的指针的数据类型！！！否则会崩溃
+
+
+
+3.MEX相关代码
+【代码】mex_lsd.cpp和mex_lsd_2.cpp的mex指令：
+mex mex_lsd.cpp lsd.cpp -I"C:\OpenCV\opencv\build\include" -I"C:\OpenCV\opencv\build\include\opencv" -I"C:\Users\HIT\Desktop\Vibration_From_Video\LSD_angel_detect\LSD-OpenCV-MATLAB-master\matlab\LSD_X64"
+（纯静态，静态链接-静态opencv库）
+mex mex_lsd_2.cpp lsd.cpp -I"C:\OpenCV\build\install\include" -I"C:\OpenCV\build\install\include\opencv" -I"C:\OpenCV\build\install\include\opencv2" -I"C:\Users\HIT\Desktop\Vibration_From_Video\LSD_angel_detect\LSD-OpenCV-MATLAB-master\matlab\LSD_X64" -L"C:\OpenCV\build\install\x64\mingw\staticlib" C:\OpenCV\build\install\x64\mingw\staticlib\libopencv_world3413.a
+（动态，动态链接-动态opencv库-静态链接gcc、stdc++库）
+mex mex_lsd_2.cpp lsd.cpp -I"C:\OpenCV\build\install\include" -I"C:\OpenCV\build\install\include\opencv" -I"C:\OpenCV\build\install\include\opencv2" -I"C:\Users\HIT\Desktop\Vibration_From_Video\LSD_angel_detect\LSD-OpenCV-MATLAB-master\matlab\LSD_X64" -L"C:\OpenCV\build\install\x64\mingw\lib" C:\OpenCV\build\install\x64\mingw\lib\libopencv_world3413.dll.a
+
+【win下MinGW_W64编译动态opencv库-静态链接gcc、stdc++库的cmake设置】：
+{CMAKE_SHARED_LINKER_FLAGS}：-static-libgcc -static-libstdc++ -static -lwinpthread
+否则运行时会出现4.2项中三个dll库未连接的错误，可以通过上述方法或将这三个dll库添加进mexw64所在目录
+
+4.MEX所需Opencv相关
+【Windows】如果在Windows上使用opencv库，注意以下几点：
+	1. 在opencv官网下载对应版本的源文件，在本地进行编译，使用与MEX使用的相同的编译器
+	2. 如果链接world库，在使用MinGW_W64时要注意有些编译器库是动态链接的：
+		LIBSTDC++-6.DLL
+		LIBGCC_S_SEH-1.DLL
+		LIBWINPTHREAD-1.DLL
+	3. 以上三个库在编译opencv库和MEX文件时均会默认被动态链接，所以有2种方法解决：
+		（1）编译opencv库时使用cmake的flags设置，将libgcc、libstdc++、lwinpthread静态链接，如（3）中
+		        之后编译MEX文件时一般会自动静态链接这几个库，但也要进行dll依赖检查，检查是否静态链接。
+		（2）编译opencv库时不进行特殊设置，只需要将matlab支持版本的MinGW_W64里的这三个dll库文件拷在mex
+		        文件目录下，或是其他matlab搜索路径目录。
+	4. 这三个dll库文件有相互调用的依赖，LIBSTDC++-6.DLL下调用LIBGCC_S_SEH-1.DLL、LIBWINPTHREAD-1.DLL
+	    LIBGCC_S_SEH-1.DLL下也调用LIBWINPTHREAD-1.DLL。
+	    使用时注意全部拷贝到
